@@ -156,21 +156,23 @@ For visualization, we provide a script that overlays the graph annotation files 
 You may create a new conda environment and install the required dependencies:
 
 ```bash
-conda create -n urbanlanegraph python=3.10
+conda env create python=3.10 --name urbanlanegraph --file environment.yml
 conda activate urbanlanegraph
-pip install -r requirements.txt
 ```
 
 
 ```bash
-python visualize_dataset.py --dataset_root $DATASET_ROOT
+python visualize_dataset.py --dataset_root $DATASET_ROOT --city Austin
 ```
-This script produces an overlay of the annotation graph files on top of the aerial image for each city.
+This script produces an overlay of the annotation graph files on top of the aerial image for each city (in this case Austin).
+
+If we add the `--plot-single-tiles` flag, the script will also plot the individual tiles of the graph annotation files.
 
 
 
 
 
+### Congratulations!
 
 If you made it this far, you may already use the dataset for your own purposes.
 
