@@ -171,6 +171,17 @@ If we add the `--plot-single-tiles` flag, the script will also plot the individu
 
 
 
+### 3 Helper functions and additional information
+
+
+We provide helper functions for typical use-cases for the UrbanLaneGraph dataset in the file `helpers.py`.
+
+
+This includes functions for aligning the argoverse2 graph annotation coordinate frame with the 
+pixel-coordinates of the aerial images of the UrbanLaneGraph dataset.
+
+
+
 
 ### Congratulations!
 
