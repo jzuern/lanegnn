@@ -1,1 +1,4 @@
+*.pyc
 .idea/
+urbanlanegraph_evaluator/urbanlanegraph_evaluator.egg-info/
+__pycache__/
