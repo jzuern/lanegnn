@@ -1,0 +1,77 @@
+main:
+    project: 'lanegnn'
+    dataset: 'paloalto'
+    version: 'none'
+    disable_wandb: True
+paths:
+    home: /home/USER/
+    package: /home/USER/lanegnn
+    dataroot: /data/ulg_data/
+    checkpoints: /home/USER/checkpoints/
+    rel_dataset: rel_dataset-path
+    split: train
+    config_name: n400-halton-endpoint
+preprocessing:
+    num_cpus: 24
+    gt_pointwise: True
+    sampling_method: halton
+    num_node_samples: 400
+    edge_proposal_method: random  # triangular or random
+    N_interp: 3
+    visualize: False
+    context_regressor_ckpt: lanegnn/centerlines-sdf-context.pth  # resnet152
+    ego_regressor_ckpt: lanegnn/centerlines-sdf-ego-context.pth  # resnet152
+    ego_regressor_num_channels: 4
+model:
+    device: cuda
+    batch_size: 2
+    dataparallel: False
+    lr: 1e-3
+    beta_lo: 0.9
+    beta_hi: 0.999
+    num_epochs: 100
+    gnn_depth: 6
+    # VARIANT lanegnn_node
+#    map_feat_dim: 128
+#    node_dim: 48
+#    edge_dim: 32
+#    msg_dim: 32
+#    edge_geo_dim: 32
+    # VARIANT lanegnn
+    map_feat_dim: 64 # 64
+    node_dim: 16 #16
+    edge_dim: 32 #32
+    msg_dim: 32 #32
+    edge_geo_dim: 16 #16
+    # end_of_archs_section
+    in_channels: 4  # number of channels of image
+    loader_workers: 4
+    weight_decay: 1e-4 #0.0001
+    checkpoint: lanegnn/model.pth # USED FOR ALL PAPER RESULTS
+driving:
+    mode: distributed  # single, multiple, distributed
+    device: cuda
+    render_onscreen: false
+    write_continuous_viz: false
+    write_graph_viz: false
+    num_gpu: 2
+    city: 'detroit'
+    tile_no: 204
+    ulg_path: /path_to_ulg_dataset/
+    data_dir: /path_to_init_points/
+    output_dir: /path_to_agg_inference_output/
+    # DRIVE-AGG PARAMETERS
+    threshold_px: 60                # local-agg graph Euclidean distance threshold
+    threshold_rad: 0.5              # local-agg graph angular distance threshold
+    non_drivable_thresh: 0.15    # drivable corridor threshold used for node sampling
+    closest_lat_dist_succ: 20       # in-drive lateral aggregation pixel threshold
+    closest_lat_dist_agg: 20        # among-drive lateral aggregation pixel threshold
+    w_decay: false
+    max_steps: 80                   # maximum number of among-branch steps
+    max_branch_age: 25              # maximum number of in-branch steps
+    smooth_pred_graph: true         # should the predicted graph be laplace-smoothed before aggregating
+    remove_smp: true                # remove parallel paths and unvalited splits and merges
+    max_branch_id: 4                # maximum number of branches
+    # DISTRIBUTED PARAMETERS
+    ray_num_gpus: 2
+    agg_single_drives: false

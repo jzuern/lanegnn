@@ -1,0 +1,102 @@
+main:
+    project: 'lane_mp'
+    dataset: 'paloalto'
+    version: 'none'
+    disable_wandb: False
+paths:
+    home: /home/buechner/
+    package: /home/buechner/lane-segmentation/
+    dataroot: /home/buechner/lanegraph/data_sep_rl/
+    dataroot_ssd: /data3/buechner/lanegraph/data_sep/
+#    dataroot_ssd: /home/buechner/lanegraph/preprocessed_rlgpu8/
+    checkpoints: /home/buechner/lane-segmentation/checkpoints/
+    rel_dataset: all/010922-large/
+    split: train
+    config_name: n400-halton-endpoint-010922-large-posreg
+preprocessing:
+    num_cpus: 24
+    gt_pointwise: True
+    sampling_method: halton
+    num_node_samples: 400
+    edge_proposal_method: random  # triangular or random
+    N_interp: 3
+    k_waypoints: 1
+    visualize: False
+    angle_penalty: 1 # not utilized yet
+    context_regressor_ckpt: lanenet/centerlines-sdf-context_sweet-snowflake-44_e_024_acc_0.503.pth  # resnet152 010922-large
+    ego_regressor_ckpt: lanenet/centerlines-sdf-ego-context_radiant-dawn-46_e_011_acc_0.318.pth  # resnet152 010922-large
+    context_regressor_ckpt_pit: lanenet/centerlines-sdf-context_toasty-river-54_e_049_acc_0.458.pth
+    context_regressor_ckpt_pao: lanenet/centerlines-sdf-context_radiant-glitter-53_e_046_acc_0.513.pth
+    context_regressor_ckpt_mia: lanenet/centerlines-sdf-context_sleek-microwave-52_e_049_acc_0.433.pth
+    context_regressor_ckpt_atx: lanenet/centerlines-sdf-context_pretty-dew-51_e_045_acc_0.453.pth
+    ego_regressor_ckpt_pit: lanenet/centerlines-sdf-ego-context_trim-moon-58_e_014_acc_0.336.pth
+    ego_regressor_ckpt_pao: lanenet/centerlines-sdf-ego-context_true-sun-57_e_017_acc_0.370.pth
+    ego_regressor_ckpt_mia: lanenet/centerlines-sdf-ego-context_different-glade-56_e_046_acc_0.260.pth
+    ego_regressor_ckpt_atx: lanenet/centerlines-sdf-ego-context_graceful-moon-55_e_016_acc_0.267.pth
+    ego_regressor_num_channels: 4
+model:
+    device: cuda
+    batch_size: 2
+    dataparallel: False
+    lr: 1e-3
+    beta_lo: 0.9
+    beta_hi: 0.999
+    num_epochs: 100
+    gnn_depth: 6
+    # lane_mpnn_node
+    #map_feat_dim: 128
+    #node_dim: 48
+    #edge_dim: 32
+    #msg_dim: 32
+    #edge_geo_dim: 32 #(but not used, only um nicht confused zu werden)
+    # lane_mpnn_att
+#    map_feat_dim: 256 #(= edge_geo_dim)
+#    node_dim: 48
+#    edge_dim: 32
+#    msg_dim: 32
+#    edge_geo_dim: 256 #(=map_feat_dim)
+    # lane_mpnn
+    map_feat_dim: 64 # 64
+    node_dim: 16 #16
+    edge_dim: 32 #32
+    msg_dim: 32 #32
+    edge_geo_dim: 16 #16
+    # end_of_archs
+    in_channels: 4  # number of channels of image
+    loader_workers: 4
+    weight_decay: 1e-4 #0.0001
+    # checkpoint: lane_mp/lanemp_laced-microwave-29_026.pth # used for drive_freely so far
+    checkpoint: lane_mp/lanemp_valiant-galaxy-428_088.pth # USED FOR ALL PAPER RESULTS
+#    checkpoint: lane_mp/lanemp_playful-puddle-428_099.pth
+#    checkpoint: lane_mp/lanemp_light-voice-343_080.pth # --- checkpoint ALL
+#    checkpoint: lane_mp/lanemp_silvery-violet-342_080.pth # --- checkpoint PAO
+#    checkpoint: lane_mp/lanemp_ancient-shadow-341_080.pth # --- checkpoint PIT
+#    checkpoint: lane_mp/lanemp_deft-leaf-340_080.pth # --- checkpoint MIA
+#    checkpoint: lane_mp/lanemp_effortless-armadillo-339_080.pth # --- checkpoint ATX
+driving:
+    mode: distributed  # single, multiple, distributed
+    device: cuda
+    render_onscreen: false
+    write_continuous_viz: false
+    write_graph_viz: false
+    num_gpu: 2
+    city: 'detroit'
+    tile_no: 204
+    ulg_path: /home/buechner/zuern/urbanlanegraph-dataset-dev/
+    data_dir: /home/buechner/lanegraph/data_code_release/lane_extraction_outputs/urbanlanegraph_eval_test/
+    output_dir: /home/buechner/lanegraph/data_code_release/agg_inference/
+    # DRIVE-AGG PARAMETERS
+    threshold_px: 80                # local-agg graph euclidean distance threshold
+    threshold_rad: 0.5              # local-agg graph angular distance threshold
+    non_drivable_thresh: 0.15    # drivable corridor threshold used for node sampling
+    closest_lat_dist_succ: 20       # in-drive lateral aggregation pixel threshold
+    closest_lat_dist_agg: 20        # among-drive lateral aggregation pixel threshold
+    w_decay: false
+    max_steps: 80                   # maximum number of among-branch steps
+    max_branch_age: 25              # maximum number of in-branch steps
+    smooth_pred_graph: true         # should the predicted graph be laplace-smoothed before aggregating
+    remove_smp: true                # remove parallel paths and unvalited splits and merges
+    max_branch_id: 4                # maximum number of branches
+    # DISTRIBUTED PARAMETERS
+    ray_num_gpus: 2
+    agg_single_drives: false

@@ -1,0 +1,89 @@
+main:
+    project: 'lane_mp'
+    dataset: 'paloalto'
+    version: 'none'
+    disable_wandb: True
+paths:
+    home: /home/zuern/
+    package: /home/zuern/lane-segmentation/
+    dataroot: /data/lanegraph/data_sep/
+    dataroot_ssd: /data/lanegraph/data_sep/
+    checkpoints: /home/zuern/lane-segmentation/checkpoints/
+    rel_dataset: all/010922-large/
+    split: test
+    config_name: n400-halton-endpoint-010922-large-posreg
+preprocessing:
+    num_cpus: 8
+    gt_pointwise: True
+    sampling_method: halton
+    num_node_samples: 400
+    edge_proposal_method: random  # triangular or random
+    N_interp: 3
+    k_waypoints: 1
+    visualize: True
+    angle_penalty: 1 # not utilized yet
+    context_regressor_ckpt: lanenet/centerlines-sdf-context_sweet-snowflake-44_e_024_acc_0.503.pth  # resnet152 010922-large
+    ego_regressor_ckpt: lanenet/centerlines-sdf-ego-context_radiant-dawn-46_e_011_acc_0.318.pth  # resnet152 010922-large
+    context_regressor_ckpt_pit: lanenet/centerlines-sdf-context_toasty-river-54_e_049_acc_0.458.pth
+    context_regressor_ckpt_pao: lanenet/centerlines-sdf-context_radiant-glitter-53_e_046_acc_0.513.pth
+    context_regressor_ckpt_mia: lanenet/centerlines-sdf-context_sleek-microwave-52_e_049_acc_0.433.pth
+    context_regressor_ckpt_atx: lanenet/centerlines-sdf-context_pretty-dew-51_e_045_acc_0.453.pth
+    ego_regressor_ckpt_pit: lanenet/centerlines-sdf-ego-context_trim-moon-58_e_014_acc_0.336.pth
+    ego_regressor_ckpt_pao: lanenet/centerlines-sdf-ego-context_true-sun-57_e_017_acc_0.370.pth
+    ego_regressor_ckpt_mia: lanenet/centerlines-sdf-ego-context_different-glade-56_e_046_acc_0.260.pth
+    ego_regressor_ckpt_atx: lanenet/centerlines-sdf-ego-context_graceful-moon-55_e_016_acc_0.267.pth
+    ego_regressor_num_channels: 4
+model:
+    dataparallel: True
+    device: cuda
+    batch_size: 2
+    lr: 1e-3
+    beta_lo: 0.9
+    beta_hi: 0.999
+    num_epochs: 100
+    gnn_depth: 6      # default: 6
+    map_feat_dim: 64
+    node_dim: 16
+    edge_dim: 32
+    msg_dim: 32
+    edge_geo_dim: 16
+    # end_of_archs
+    in_channels: 4  # number of channels of image
+    loader_workers: 4
+    weight_decay: 1e-4 #0.0001
+    #checkpoint: lanemp/ablations/lanemp_bright-star-432_090.pth  # ablations
+    #checkpoint: lanemp/ablations/lanemp_desert-bee-441_090.pth  # no context
+    #checkpoint: lanemp/ablations/lanemp_divine-universe-440_090.pth  # no edge feats
+    #checkpoint: lanemp/ablations/lanemp_noble-moon-442_090.pth  # no ego
+    #checkpoint: lanemp/ablations/lanemp_misty-glade-511_090.pth  # no CMP
+    #checkpoint: lanemp/lanemp_dauntless-pond-324_038.pth  # pao ok (jannik always used that)
+    checkpoint: lanemp/lanemp_valiant-galaxy-428_088.pth
+    #checkpoint: lanemp/lanemp_valiant-galaxy-428_040.pth  # mia ok?
+driving:
+    experiment_name: debug_rebuttal
+    mode: multiple # single or multiple
+    device: cuda
+    render_onscreen: false
+    write_continuous_viz: false
+    output_dir: /data/lane-segmentation/drive_freely_output/
+    #satellite_image_path: /home/zuern/Desktop/cvpr-viz/mia_580-30878.png
+    #satellite_image_path: /home/zuern/UnofficialLaneExtraction/mia_test_2000-43800.png
+    #satellite_image_path: /home/zuern/Desktop/cvpr-viz/mia_2324-39156.png
+    #satellite_image_path: /home/zuern/Desktop/cvpr-viz/mia_7756-38748.png
+    #satellite_image_path: /home/zuern/Desktop/cvpr-viz/mia_17548-9692.png
+    satellite_image_path: /home/zuern/UnofficialLaneExtraction/mia_test_42000-23500_small_crop.png
+    #starting_pose: [ 2789, 3020, 8 * np.pi / 4 ]
+    #poses_path: /home/zuern/UnofficialLaneExtraction/dataset_argoverse2/test_tiles/mia_test_2000-43800_init_poses.json
+    poses_path: /home/zuern/UnofficialLaneExtraction/dataset_argoverse2/test_tiles/mia_test_42000-23500_init_poses_filt.json
+    # DRIVE-AGG PARAMETERS
+    threshold_px: 80                # local agg graph euclidean distance threshold
+    threshold_rad: 0.5              # local agg graph angular distance threshold
+    non_drivable_thresh: 0.15    # drivable corridor threshold used for node sampling
+    closest_lat_dist_succ: 30       # in-drive lateral aggregation pixel threshold
+    closest_lat_dist_agg: 20        # among-drive lateral aggregation pixel threshold
+    w_decay: false
+    max_steps: 30                   # maximum number of among-branch steps
+    max_branch_age: 10              # maximum number of in-branch steps
+    smooth_pred_graph: true         # should the predicted graph be laplace-smoothed before aggregating
+    remove_smp: false                # remove parallel paths and unvalited splits and merges
+    max_branch_id: 3                # maximum number of branches
