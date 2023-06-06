@@ -25,7 +25,7 @@ export DATASET_ROOT=/path/to/urbanlanegraph/dataset
 
 ### 1.1 Request dataset access
 
-Please request dataset access at http://urbanlanegraph.cs.uni.freiburg.de/download.
+Please request dataset access at http://urbanlanegraph.cs.uni-freiburg.de/download.
 Upon acceptance of your request, we will send you an email containing the download link.
 
 ### 1.2 Download and unpack
@@ -50,12 +50,12 @@ You should see the following output for `tree $DATASET_ROOT/*`:
 
 ```bash
 urbanlanegraph-dataset
-├── Austin
-│   ├── Austin_direction.png          # color-coded lane direction
-│   ├── Austin_drivable.png           # drivable surfaces
-│   ├── Austin_centerlines.png        # heatmap of centerlines
-│   ├── Austin_intersections.png      # binary map of intersection regions
-│   ├── Austin.png                    # RGB aerial image
+├── austin
+│   ├── austin_direction.png          # color-coded lane direction
+│   ├── austin_drivable.png           # drivable surfaces
+│   ├── austin_centerlines.png        # heatmap of centerlines
+│   ├── austin_intersections.png      # binary map of intersection regions
+│   ├── austin.png                    # RGB aerial image
 │   └── tiles
 │       ├── eval
 │           ├── *.gpickle  # graph annotation files of eval tiles.
@@ -63,11 +63,11 @@ urbanlanegraph-dataset
 │       └── train
 │           ├── *.gpickle  # graph annotation files of train tiles.
 │           ├── ...
-├── Detroit
-│   ├── Detroit_direction.png
-│   ├── Detroit_drivable.png
-│   ├── Detroit_intersections.png
-│   ├── Detroit.png
+├── detroit
+│   ├── detroit_direction.png
+│   ├── detroit_drivable.png
+│   ├── detroit_intersections.png
+│   ├── detroit.png
 │   └── tiles
 │       ├── eval
 │           ├── *.gpickle  # graph annotation files of eval tiles.
@@ -75,12 +75,12 @@ urbanlanegraph-dataset
 │       └── train
 │           ├── *.gpickle  # graph annotation files of train tiles.
 │           ├── ...
-├── Miami
-│   ├── Miami_direction.png
-│   ├── Miami_drivable.png
-│   ├── Miami_centerlines.png  
-│   ├── Miami_intersections.png
-│   ├── Miami.png
+├── miami
+│   ├── miami_direction.png
+│   ├── miami_drivable.png
+│   ├── miami_centerlines.png  
+│   ├── miami_intersections.png
+│   ├── miami.png
 │   └── tiles
 │       ├── eval
 │           ├── *.gpickle  # graph annotation files of eval tiles.
@@ -88,12 +88,12 @@ urbanlanegraph-dataset
 │       └── train
 │           ├── *.gpickle  # graph annotation files of train tiles.
 │           ├── ...
-├── PaloAlto
-│   ├── PaloAlto_direction.png
-│   ├── PaloAlto_drivable.png
-│   ├── PaloAlto_centerlines.png
-│   ├── PaloAlto_intersections.png
-│   ├── PaloAlto.png
+├── paloalto
+│   ├── paloalto_direction.png
+│   ├── paloalto_drivable.png
+│   ├── paloalto_centerlines.png
+│   ├── paloalto_intersections.png
+│   ├── paloalto.png
 │   └── tiles
 │       ├── eval
 │           ├── *.gpickle  # graph annotation files of eval tiles.
@@ -101,12 +101,12 @@ urbanlanegraph-dataset
 │       └── train
 │           ├── *.gpickle  # graph annotation files of train tiles.
 │           ├── ...
-├── Pittsburgh
-│   ├── Pittsburgh_direction.png
-│   ├── Pittsburgh_drivable.png
-│   ├── Pittsburgh_centerlines.png
-│   ├── Pittsburgh_intersections.png
-│   ├── Pittsburgh.png
+├── pittsburgh
+│   ├── pittsburgh_direction.png
+│   ├── pittsburgh_drivable.png
+│   ├── pittsburgh_centerlines.png
+│   ├── pittsburgh_intersections.png
+│   ├── pittsburgh.png
 │   └── tiles
 │       ├── eval
 │           ├── *.gpickle  # graph annotation files of eval tiles.
@@ -114,12 +114,12 @@ urbanlanegraph-dataset
 │       └── train
 │           ├── *.gpickle  # graph annotation files of train tiles.
 │           ├── ...
-└── Washington
-    ├── Washington_direction.png
-    ├── Washington_drivable.png
-    ├── Washington_centerlines.png
-    ├── Washington_intersections.png
-    └── Washington.png
+└── washington
+    ├── washington_direction.png
+    ├── washington_drivable.png
+    ├── washington_centerlines.png
+    ├── washington_intersections.png
+    └── washington.png
     └── tiles
         ├── eval
             ├── *.gpickle  # graph annotation files of eval tiles.
@@ -162,23 +162,22 @@ conda activate urbanlanegraph
 
 
 ```bash
-python visualize_dataset.py --dataset_root $DATASET_ROOT --city Austin
+python visualize_dataset.py --dataset_root $DATASET_ROOT --city austin
 ```
-This script produces an overlay of the annotation graph files on top of the aerial image for each city (in this case Austin).
+This script produces an overlay of the annotation graph files on top of the aerial image for each city (in this case austin).
 
 If we add the `--plot-single-tiles` flag, the script will also plot the individual tiles of the graph annotation files.
 
 
 
 
-### 3 Helper functions and additional information
+### 3 Metadata API and Helper functions and additional information
 
+As part of this dataset we provide a small set of helper functions for typical use cases in the form of a API. 
+Feel free to import the ```UrbanLaneGraphMetadata``` class under ```urbanlanegraph_dataset/api.py```.
 
-We provide helper functions for typical use-cases for the UrbanLaneGraph dataset in the file `helpers.py`.
-
-
-This includes functions for aligning the argoverse2 graph annotation coordinate frame with the 
-pixel-coordinates of the aerial images of the UrbanLaneGraph dataset.
+You may utilize the API to get tile-specific offsets wrt. the global aerial image, obtain dataset splits, tile images or tile GT graphs.
+Additionally, this includes functions for aligning the argoverse2 graph annotation coordinate frame with the pixel-coordinates of the aerial images of the UrbanLaneGraph dataset. 
 
 
 
