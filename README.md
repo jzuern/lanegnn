@@ -33,10 +33,29 @@ ______________________________________________________________________
 
 To view the download instructions, please see the file [DOWNLOAD.md](urbanlanegraph_dataset/DOWNLOAD.md)
 
-______________________________________________________________________
-## UrbanLaneGraph _Benchmark_ 
+
+### Evaluator
 
 [![DOI](https://img.shields.io/badge/license-MIT-lightgrey)]()
 
+To install the `urbanlanegraph_evaluator` package, find the instructions in 
+[urbanlanegraph_evaluator/INSTALL.md](urbanlanegraph_evaluator/INSTALL.md).
+
+Instructions on how to evaluate your model locally using the package may be found in 
+[urbanlanegraph_evaluator/EVALUATION_INSTRUCTIONS.md](urbanlanegraph_evaluator/EVALUATION_INSTRUCTIONS.md).
+
+
+______________________________________________________________________
+## UrbanLaneGraph _Benchmark_ on Eval.AI
+
 
 Coming soon!
+
+
+
+
+### Acknowledgements
+
+We thank the following projects for making their code available:
+- [LaneExtraction](https://github.com/songtaohe/LaneExtraction/)
+- [apls](https://github.com/CosmiQ/apls)
