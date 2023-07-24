@@ -3,7 +3,7 @@ import pickle
 import networkx as nx
 
 from urbanlanegraph_evaluator.urbanlanegraph_evaluator.evaluator import GraphEvaluator
-from dataset_preparation.settings import UrbanLaneGraphMetadata
+from urbanlanegraph_dataset.api import UrbanLaneGraphMetadata
 
 
 # Define split and list of cities to evaluate

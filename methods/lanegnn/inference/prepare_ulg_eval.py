@@ -1,13 +1,12 @@
 import argparse
 import os
 import numpy as np
-from collections import defaultdict
-import networkx as nx
 import pickle
 import glob
 
 from lanegnn.utils.params import ParamLib
-from dataset_preparation.settings import UrbanLaneGraphMetadata
+from urbanlanegraph_dataset.api import UrbanLaneGraphMetadata
+
 
 def produce_result_dict(params, experiment_name, split):
     """

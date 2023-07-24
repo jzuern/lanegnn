@@ -12,10 +12,19 @@ import torchvision.transforms as T
 
 from lanegnn.utils.sampling import halton, get_random_edges
 from lanegnn.utils.continuous import is_in_mask_loop, get_cropped_edge_img
-
 from lanegnn.learning.lane_mpnn import LaneGNN
+from methods.regressors import build_net
 
-from dataset_preparation.generate_pth_samples import get_ego_centerline_regressor, get_context_centerline_regressor
+
+
+def get_context_centerline_regressor(ckpt=None, use_cuda=False):
+    model = build_net.build_network(snapshot=ckpt, backend='resnet152', use_cuda=use_cuda, n_classes=1)
+    return model
+
+def get_ego_centerline_regressor(ckpt=None, use_cuda=False, num_channels=3):
+    model = build_net.build_network(snapshot=ckpt, backend='resnet152', use_cuda=use_cuda, n_classes=1, num_channels=num_channels)
+    return model
+
 
 def live_halton_sampling(non_drivable_mask, num_node_samples: int):
     """
