@@ -130,17 +130,16 @@ def get_target_data(params, data, split):
     """
     Returns the target graph data for the given sample for the successor-LGP task.
     """
-    tile_no = int(data.tile_no[0].cpu().detach().numpy())
+    tile_id = data.tile_id[0]
+    city = data.city[0]
     walk_no = int(data.walk_no[0].cpu().detach().numpy())
     idx = int(data.idx[0].cpu().detach().numpy())
-    city = data.city[0]
 
-
-    json_fname = "{}{}/{}/{}/{:03d}_{:03d}_{:03d}-targets.json".format(params.paths.dataroot, params.paths.rel_dataset, city, split, tile_no, walk_no, idx)
+    json_fname = "{}/{}/{}_{}_{:03d}_{:03d}-graph.json".format(params.paths.dataroot, split, city, tile_id, walk_no, idx)
     with open(json_fname, 'r') as f:
         targets = json.load(f)
 
-    targets['tile_no'] = tile_no
+    targets['tile_id'] = tile_id
     targets['walk_no'] = walk_no
     targets['idx'] = idx
 

@@ -25,11 +25,11 @@ import matplotlib
 from queue import PriorityQueue
 import matplotlib.pyplot as plt
 
-from lanegnn.utils.params import ParamLib
-from lanegnn.utils.graph import unbatch_edge_index
+from methods.lanegnn.utils.params import ParamLib
+from methods.lanegnn.utils.graph import unbatch_edge_index
 
-from lanegnn.learning.lane_mpnn import LaneGNN
-from lanegnn.learning.data import GraphDataset, PreGraphDataset
+from methods.lanegnn.learning.lane_mpnn import LaneGNN
+from methods.lanegnn.learning.data import PreGraphDataset
 
 
 def preprocess_predictions(params, model, data, gt_available=True):

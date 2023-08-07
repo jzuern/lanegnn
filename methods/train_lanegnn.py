@@ -2,8 +2,6 @@ from builtins import Exception
 import os, psutil
 import threading
 
-# os.environ['CUDA_VISIBLE_DEVICES'] = "1"
-
 import networkx as nx
 import wandb
 import argparse
@@ -25,8 +23,6 @@ from urbanlanegraph_evaluator.evaluator import GraphEvaluator
 
 from lanegnn.utils.params import ParamLib
 from lanegnn.utils.graph import assign_edge_lengths, unbatch_edge_index, get_target_data, get_gt_graph
-
-# SELECT MODEL TO BE USED
 from lanegnn.learning.lane_mpnn import LaneGNN
 from lanegnn.learning.data import PreGraphDataset
 from lanegnn.inference.traverse_endpoint import preprocess_predictions, predict_lanegraph
@@ -39,11 +35,11 @@ class Trainer():
     """
     LaneGNN trainer class
     """
-    def __init__(self, params, model, dataloader_train, dataloader_test, dataloader_trainoverfit, optimizer, logging_dir='./logs'):
+    def __init__(self, params, model, dataloader_train, dataloader_eval, dataloader_trainoverfit, optimizer, logging_dir='./logs'):
 
         self.model = model
         self.dataloader_train = dataloader_train
-        self.dataloader_test = dataloader_test
+        self.dataloader_eval = dataloader_eval
         self.dataloader_trainoverfit = dataloader_trainoverfit
         self.params = params
         self.optimizer = optimizer
@@ -299,7 +295,7 @@ class Trainer():
             self.total_step += 1
 
 
-    def eval(self, epoch, split='test', log_images=True, log_all_images=False):
+    def eval(self, epoch, split='eval', log_images=True, log_all_images=False):
 
         edge_threshold = 0.5
         node_threshold = 0.5
@@ -307,8 +303,8 @@ class Trainer():
         self.model.eval()
         print('Evaluating on {}'.format(split))
 
-        if split == 'test':
-            dataloader = self.dataloader_test
+        if split == 'eval':
+            dataloader = self.dataloader_eval
         elif split == 'trainoverfit':
             dataloader = self.dataloader_trainoverfit
         elif split == 'train':
@@ -403,24 +399,24 @@ class Trainer():
             graph_gt_nx = assign_edge_lengths(graph_gt_nx)
 
             # metrics_dict = calc_all_metrics(graph_gt_nx, graph_pred_nx, split=split)
-            metrics_dict = GraphEvaluator().evaluate_graph(graph_gt_nx, graph_pred_nx, area_size=[256, 256])
+            metrics_dict = GraphEvaluator().evaluate_graph(graph_gt_nx, graph_pred_nx, area_size=[256, 256], lane_width=10)
             metrics_dict_list.append(metrics_dict)
 
-            tile_no = int(data.tile_no[0].cpu().detach().numpy())
+            tile_id = data.tile_id[0]
             walk_no = int(data.walk_no[0].cpu().detach().numpy())
             idx = int(data.idx[0].cpu().detach().numpy())
             city = data.city[0]
-            sample_token = "{}_{:03d}_{:03d}_{:03d}".format(city, tile_no, walk_no, idx)
+            sample_token = "{}_{}_{:03d}_{:03d}".format(city, tile_id, walk_no, idx)
 
             # Visualization if not torch.isnan(loss):
             if not torch.isnan(loss):
                 if (i_val % 25 == 0 and log_images) or log_all_images:
                     if self.params.model.dataparallel:
                         data = data_orig
-                    self.do_logging(data, self.total_step, plot_text='test/Images', split='test', sample_token=sample_token)
+                    self.do_logging(data, self.total_step, plot_text='eval/Images', split='eval', sample_token=sample_token)
             else:
                 # write skipped samples to log file
-                with open(os.path.join(str(data.city[0])+"_test_logfile.txt"), 'a') as f:
+                with open(os.path.join(str(data.city[0])+"_eval_logfile.txt"), 'a') as f:
                     f.write('{},{},{},{},{}\n'.format(data.tile_no, data.walk_no, data.idx, loss.item(), epoch))
 
         ap_edge_mean = np.nanmean(ap_edge_list)
@@ -468,9 +464,8 @@ def main():
     # Namespace-specific arguments (namespace: training)
     parser.add_argument('--lr', type=str, help='model path')
     parser.add_argument('--epochs', type=str, help='model path')
-    parser.add_argument('--city_train', type=str, help='city to train on or concatentation of cities', default=None)
-    parser.add_argument('--city_test', type=str, help='city to test on or concatentation of cities', default=None)
     parser.add_argument('--logging_dir', type=str, help='directory to log to', default='logs')
+    parser.add_argument('--dataroot', type=str, help='path to train and eval data, Must contain a train and eval folder')
 
     opt = parser.parse_args()
 
@@ -478,6 +473,8 @@ def main():
     params.main.overwrite(opt)
     params.preprocessing.overwrite(opt)
     params.model.overwrite(opt)
+
+    params.paths.dataroot = opt.dataroot
 
     print("Batch size summed over all GPUs: ", params.model.batch_size)
     
@@ -521,12 +518,12 @@ def main():
                                     weight_decay=float(params.model.weight_decay),
                                     betas=(params.model.beta_lo, params.model.beta_hi))
 
-    # define own collator that skips bad samples
-    train_path = os.path.join(params.paths.dataroot, params.paths.rel_dataset, "preprocessed", "train", params.paths.config_name)
-    test_path = os.path.join(params.paths.dataroot, params.paths.rel_dataset, "preprocessed", "test", params.paths.config_name)
+    # define train and eval paths
+    train_path = os.path.join(params.paths.dataroot, 'train', 'processed')
+    eval_path = os.path.join(params.paths.dataroot, 'eval', 'processed')
 
-    dataset_train = PreGraphDataset(params, path=train_path,  visualize=params.preprocessing.visualize, city=opt.city_train)
-    dataset_test = PreGraphDataset(params, path=test_path, visualize=params.preprocessing.visualize, city=opt.city_test)
+    dataset_train = PreGraphDataset(params, path=train_path,  visualize=params.preprocessing.visualize)
+    dataset_eval = PreGraphDataset(params, path=eval_path, visualize=params.preprocessing.visualize)
 
     if params.model.dataparallel:
         dataloader_obj = DataListLoader
@@ -537,7 +534,8 @@ def main():
                                       batch_size=params.model.batch_size,
                                       num_workers=params.model.loader_workers,
                                       shuffle=True)
-    dataloader_test = dataloader_obj(dataset_test,
+
+    dataloader_eval = dataloader_obj(dataset_eval,
                                      batch_size=1,
                                      num_workers=1,
                                      shuffle=False)
@@ -547,7 +545,7 @@ def main():
                                              shuffle=False)
 
 
-    trainer = Trainer(params, model, dataloader_train, dataloader_test, dataloader_trainoverfit, optimizer, opt.logging_dir)
+    trainer = Trainer(params, model, dataloader_train, dataloader_eval, dataloader_trainoverfit, optimizer, opt.logging_dir)
 
     for epoch in range(params.model.num_epochs):
         trainer.train(epoch)
@@ -562,7 +560,7 @@ def main():
             wandb.save(params.paths.home + fname)
 
         # Evaluate
-        trainer.eval(epoch, split='test', log_images=True)
+        trainer.eval(epoch, split='eval', log_images=True)
 
         process = psutil.Process(os.getpid())
         print("RAM: ", str(process.memory_info().rss / 1024 / 1024))  # in MB

@@ -24,12 +24,10 @@ class CenterlineDataset(Dataset):
     """
     Dataset definition for centerline / ego-centerline incl. context dataset.
     """
-    def __init__(self, root, cities, use_ood, split, sdf_version):
+    def __init__(self, root, split, sdf_version):
         """
         Compiles file list of all samples based on the provided SDF type.
         :param root: base directory path
-        :param cities: String of comma-separated cities such as "pao,pit"
-        :param use_ood: whether to include out-of-distribution samples?
         :param split: dataset split
         :param sdf_version: string defining what kind of segmentation model to train (see below)
         """
@@ -48,17 +46,18 @@ class CenterlineDataset(Dataset):
         self.rgb_files = []
         self.centerlines_files = []
 
-        for city in cities:
-            print("Searching for files in", os.path.join(root, city, split, rgb_search_string))
-            rgb_files = sorted(glob(os.path.join(root, city, split, rgb_search_string)))
-            centerlines_files = sorted(glob(os.path.join(root, city, split, sdf_search_string)))
-            assert len(rgb_files) == len(centerlines_files)
-            assert len(rgb_files) > 0
-            self.rgb_files.extend(rgb_files)
-            self.centerlines_files.extend(centerlines_files)
-
-
         print("Split: {}".format(split))
+
+        print("     Searching for files in", os.path.join(root, "*", split, rgb_search_string))
+        rgb_files = sorted(glob(os.path.join(root, "*", split, rgb_search_string)))
+        centerlines_files = sorted(glob(os.path.join(root, "*", split, sdf_search_string)))
+        self.rgb_files.extend(rgb_files)
+        self.centerlines_files.extend(centerlines_files)
+
+        assert len(self.rgb_files) == len(self.centerlines_files), "Number of rgb files and centerlines files must match"
+        assert len(self.rgb_files) > 0, "No files found. Do you have both train and eval folders?"
+
+
         print('Found {} images'.format(len(self.rgb_files)))
         print('Found {} centerlines_files'.format(len(self.centerlines_files)))
 
@@ -177,7 +176,7 @@ class Trainer():
     def eval(self, split, epoch):
 
         self.model.eval()
-        print('Evaluating', split)
+        print('Evaluating split: {}'.format(split))
 
         accs = []
         ious = []
@@ -277,8 +276,6 @@ if __name__ == '__main__':
     parser.add_argument('--lr', type=float, help='learning rate)', default=1e-3)
     parser.add_argument('--n_epochs', type=int, help='number of epochs)', default=1000)
     parser.add_argument("--dataset-root", default="")
-    parser.add_argument("--cities", default="atx,mia,pao,pit")
-    parser.add_argument("--use_ood", type=int, default=1)
     parser.add_argument("--sdf_version", choices=["centerlines-sdf-ego", "centerlines-sdf-context", "centerlines-sdf-ego-context"], default="centerlines-sdf-context")
     parser.add_argument("--visualize", action='store_true')
     parser.add_argument("--augment", action='store_true')
@@ -291,14 +288,10 @@ if __name__ == '__main__':
         wandb.init(entity='wandb_entity', project="centerlines", config=args)
 
     dataset_train = CenterlineDataset(args.dataset_root,
-                                      cities=args.cities.split(','),
-                                      use_ood=args.use_ood==1,
                                       split="train",
                                       sdf_version=args.sdf_version)
     dataset_test = CenterlineDataset(args.dataset_root,
-                                     cities=args.cities.split(','),
-                                     use_ood=args.use_ood==1,
-                                     split='test',
+                                     split='eval',
                                      sdf_version=args.sdf_version)
 
     dataloader_train = DataLoader(dataset_train,
@@ -344,4 +337,4 @@ if __name__ == '__main__':
 
     for epoch in range(args.n_epochs):
         trainer.train(epoch)
-        trainer.eval("test", epoch)
+        trainer.eval("eval", epoch)

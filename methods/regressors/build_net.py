@@ -1,6 +1,6 @@
 import os
 import torch
-from regressors.pspnet import PSPNet, PSPNetDoubleHead
+from methods.regressors.pspnet import PSPNet, PSPNetDoubleHead
 from collections import OrderedDict
 
 

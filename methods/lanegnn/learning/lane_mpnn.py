@@ -68,7 +68,7 @@ class LaneGNN(torch.nn.Module):
         )
 
         # Encoding of aerial edge features
-        self.map_encoder = get_map_encoder(out_features=map_feat_dim, in_channels=in_channels) # default: 64
+        self.map_encoder = get_map_encoder(out_features=map_feat_dim, in_channels=in_channels)
 
         self.fuse_edge = nn.Sequential(
             nn.Linear(edge_geo_dim+map_feat_dim, edge_dim*2),
@@ -107,6 +107,7 @@ class LaneGNN(torch.nn.Module):
         )
 
         self.message_passing = CausalMessagePassing(node_dim=node_dim, edge_dim=edge_dim, msg_dim=msg_dim)
+        # self.message_passing = MessagePassing(node_dim=node_dim, edge_dim=edge_dim, msg_dim=msg_dim)
 
     def forward(self, data):
         node_feats, edge_img_feats, edge_attr, edge_index, batch = (
@@ -147,7 +148,7 @@ class CausalMessagePassing(torch_geometric.nn.MessagePassing):
         """
         super(CausalMessagePassing, self).__init__(aggr='add', )
 
-        self.edge_update = nn.Sequential(
+        self.edge_update_net = nn.Sequential(
             nn.Linear(node_dim*2+edge_dim, node_dim*2),
             nn.ReLU(),
             nn.Linear(node_dim*2, edge_dim*2),
@@ -264,7 +265,8 @@ class CausalMessagePassing(torch_geometric.nn.MessagePassing):
         :obj:`_j` to the variable name, *.e.g.* :obj:`x_i` and :obj:`x_j`.
         """
         edge_update_features = torch.cat([x_i, x_j, edge_attr], dim=1)
-        updated_edge_attr = self.edge_update(edge_update_features)
+        updated_edge_attr = self.edge_update_net(edge_update_features)
+        # updated_edge_attr = edge_attr
 
         future_msg_feats = torch.cat([x_i, updated_edge_attr, initial_x_i], dim=1)
         future_msgs = self.create_future_msgs(future_msg_feats)

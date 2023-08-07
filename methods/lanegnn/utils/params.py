@@ -58,15 +58,15 @@ class ParamLib:
         vars(self.model).update(config_file['model'])
         vars(self.driving).update(config_file['driving'])
 
-        # Set some secondary paths that are important
-        if self.main.dataset == "paloalto":
-            pass
-            # print("using palo alto")
-            # paths to preprocessed data
-            #self.paths.preprocessed_data = os.path.join(self.paths.home, self.main.dataset, 'preprocessed/')
-
-        else:
-            raise NotImplementedError
+        # # Set some secondary paths that are important
+        # if self.main.dataset == "paloalto":
+        #     pass
+        #     # print("using palo alto")
+        #     # paths to preprocessed data
+        #     #self.paths.preprocessed_data = os.path.join(self.paths.home, self.main.dataset, 'preprocessed/')
+        #
+        # else:
+        #     raise NotImplementedError
 
     def create_dir_structure(self):
         """

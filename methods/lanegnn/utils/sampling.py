@@ -3,6 +3,27 @@ from scipy.spatial import Delaunay
 from scipy.spatial.distance import cdist
 
 
+def get_delaunay_triangulation(points):
+    """
+    DEPRECATED
+    Used for triangular edge proposal method instead of get_random_edges().
+    """
+    tri = Delaunay(points)
+
+    # convert simplices to index pairs
+    simplices = []
+    for s in tri.simplices:
+        simplices.append([s[0], s[1]])
+        simplices.append([s[1], s[0]])
+        simplices.append([s[0], s[2]])
+        simplices.append([s[2], s[0]])
+        simplices.append([s[1], s[2]])
+        simplices.append([s[2], s[1]])
+
+    return np.array(simplices)
+
+
+
 def get_random_edges(point_coords, min_point_dist=10, max_point_dist=50):
     """
     Based on node coordinates and a minimum/maximum edge length, return edges

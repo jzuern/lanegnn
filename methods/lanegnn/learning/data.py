@@ -1,26 +1,13 @@
 from abc import ABC
-
 import numpy as np
 import torch
-
 import os
 from glob import glob
-from PIL import Image
 import cv2
-from sklearn.neighbors import KernelDensity
-from sklearn.preprocessing import minmax_scale
-import matplotlib.pyplot as plt
 import codecs
 import json
 import time
-import pickle
 import torch_geometric.data.dataset
-import torchvision.transforms as T
-from shapely.geometry import LineString, MultiLineString, Point
-
-from lanegnn.utils.continuous import is_in_mask_loop, get_gt_sdf_with_direction, get_pred_distance_sdf, \
-    get_pointwise_edge_gt, get_cropped_edge_img
-from lanegnn.utils.sampling import get_delaunay_triangulation, halton
 
 
 class PreGraphDataset(torch_geometric.data.Dataset, ABC):
@@ -28,7 +15,7 @@ class PreGraphDataset(torch_geometric.data.Dataset, ABC):
     Defines dataset when using preprocessed data during LaneGNN training.
     Segmentation, graph sampling and ground truth generation already done in preprocessing.
     """
-    def __init__(self, params, path, visualize: bool = False, index_filter=None, city=None):
+    def __init__(self, params, path, visualize: bool = False, index_filter=None):
         super(PreGraphDataset, self).__init__()
         """
         Based on the provided cities and an existing preprocessed set of samples for the Successor-LGP task, 
@@ -37,9 +24,6 @@ class PreGraphDataset(torch_geometric.data.Dataset, ABC):
         :param path: global path that holds preprocessed dataset files.
         :param visualize: Show RGB, ego- and context-regression as well as sampled edges for debugging.
         :param index_filter: Use index-filter to obtain a dummy dataset of cities and tiles satisfying the index_filter.
-        :param city: Define the city or set of cities used during training. Each city is defined by a three-character
-            string or a list of comma-separated three-character strings: 'atx' for only Atlanta or, e.g., 'atx,mia,pao' 
-            for Atlanta, Miami and Palo Alto.
         """
 
         self.visualize = visualize
@@ -59,42 +43,21 @@ class PreGraphDataset(torch_geometric.data.Dataset, ABC):
         self.context_regr_smooth_files = []
         self.ego_regr_smooth_files = []
 
-        # Extract city splits to use
-        path = "/**/" + os.path.join(*path.split("/")[2:])
-        if city==None:
-            #raise ValueError('Please provide one of these cities: atx,mia,pao,pit')
-            cities = ["*"]
-            # only take away first element of path
-            print("No city specified, matching paths under all partitions / root folders")
-            print(path)
-        elif len(city) == 3:
-            cities = ["*"+city]
-        elif len(city) > 3:
-            # multiple cities
-            city_list = city.split(",")
-            cities = ["*"+city for city in city_list]
-            print(cities)
-        else:
-            raise ValueError(city)
 
-        # Add all city-wise data
-        for city_str in cities:
-            print(path + '/{}-node-feats.pth'.format(city_str))
-            self.node_feats_files.extend(glob(path + '/{}-node-feats.pth'.format(city_str)))
-            self.edge_files.extend(glob(path + '/{}-edges.pth'.format(city_str)))
-            self.edge_attr_files.extend(glob(path + '/{}-edge-attr.pth'.format(city_str)))
-            self.edge_img_feats_files.extend(glob(path + '/{}-edge-img-feats.pth'.format(city_str)))
-            self.node_gt_files.extend(glob(path + '/{}-node-gt.pth'.format(city_str)))
-            self.node_endpoint_gt_files.extend(glob(path + '/{}-node-endpoint-gt.pth'.format(city_str)))
-            self.edge_gt_files.extend(glob(path + '/{}-edge-gt.pth'.format(city_str)))
-            self.edge_gt_onehot_files.extend(glob(path + '/{}-edge-gt-onehot.pth'.format(city_str)))
-            self.gt_graph_files.extend(glob(path + '/{}-gt-graph.pth'.format(city_str)))
-            self.rgb_files.extend(glob(path + '/{}-rgb.pth'.format(city_str)))
-            self.rgb_context_files.extend(glob(path + '/{}-rgb-context.pth'.format(city_str)))
-            self.context_regr_smooth_files.extend(glob(path + '/{}-context-regr-smooth.pth'.format(city_str)))
-            self.ego_regr_smooth_files.extend(glob(path + '/{}-ego-regr-smooth.pth'.format(city_str)))
+        self.node_feats_files.extend(glob(path + '/*-node-feats.pth'))
+        self.edge_files.extend(glob(path + '/*-edges.pth'))
+        self.edge_attr_files.extend(glob(path + '/*-edge-attr.pth'))
+        self.edge_img_feats_files.extend(glob(path + '/*-edge-img-feats.pth'))
+        self.node_gt_files.extend(glob(path + '/*-node-gt.pth'))
+        self.node_endpoint_gt_files.extend(glob(path + '/*-node-endpoint-gt.pth'))
+        self.edge_gt_files.extend(glob(path + '/*-edge-gt.pth'))
+        self.edge_gt_onehot_files.extend(glob(path + '/*-edge-gt-onehot.pth'))
+        self.gt_graph_files.extend(glob(path + '/*-gt-graph.pth'))
+        self.rgb_files.extend(glob(path + '/*-rgb.pth'))
+        self.rgb_context_files.extend(glob(path + '/*-rgb-context.pth'))
+        self.context_regr_smooth_files.extend(glob(path + '/*-context-regr-smooth.pth'))
+        self.ego_regr_smooth_files.extend(glob(path + '/*-ego-regr-smooth.pth'))
 
-        print(self.node_feats_files[0])
         self.node_feats_files = sorted(self.node_feats_files)
         self.edge_files = sorted(self.edge_files)
         self.edge_attr_files = sorted(self.edge_attr_files)
@@ -109,19 +72,19 @@ class PreGraphDataset(torch_geometric.data.Dataset, ABC):
         self.context_regr_smooth_files = sorted(self.context_regr_smooth_files)
         self.ego_regr_smooth_files = sorted(self.ego_regr_smooth_files)
 
-        print(len(self.node_feats_files))
-        print(len(self.edge_files))
-        print(len(self.edge_attr_files))
-        print(len(self.edge_img_feats_files))
-        print(len(self.node_gt_files))
-        print(len(self.node_endpoint_gt_files))
-        print(len(self.edge_gt_files))
-        print(len(self.edge_gt_onehot_files))
-        print(len(self.gt_graph_files))
-        print(len(self.rgb_files))
-        print(len(self.rgb_context_files))
-        print(len(self.context_regr_smooth_files))
-        print(len(self.ego_regr_smooth_files))
+        # print(len(self.node_feats_files))
+        # print(len(self.edge_files))
+        # print(len(self.edge_attr_files))
+        # print(len(self.edge_img_feats_files))
+        # print(len(self.node_gt_files))
+        # print(len(self.node_endpoint_gt_files))
+        # print(len(self.edge_gt_files))
+        # print(len(self.edge_gt_onehot_files))
+        # print(len(self.gt_graph_files))
+        # print(len(self.rgb_files))
+        # print(len(self.rgb_context_files))
+        # print(len(self.context_regr_smooth_files))
+        # print(len(self.ego_regr_smooth_files))
         print("Found {} samples in path {}".format(len(self.rgb_files), path))
 
 
@@ -131,15 +94,17 @@ class PreGraphDataset(torch_geometric.data.Dataset, ABC):
     def __getitem__(self, index):
 
         # Obtain token identifying the sample
-        token = self.rgb_files[index].split("/")[-1].split("_")
-        tile_no = int(token[0])
-        walk_no = int(token[1])
-        idx = int(token[2].split("-")[0])
+        tokens = self.rgb_files[index].split("/")[-1].split("_")
+        city = tokens[0]
+        tile_id = "_".join(tokens[1:4])
+        walk_no = int(tokens[4])
+        idx = int(tokens[5])
 
         if self.index_filter is not None:
             # Return reduced data object if the index is contained in index_filter.
             if self.index_filter[index] == 0:
-                return torch_geometric.data.Data(tile_no=torch.tensor(tile_no),
+                return torch_geometric.data.Data(tile_id=torch.tensor(tile_id),
+                                                 city=torch.tensor(city),
                                                  walk_no=torch.tensor(walk_no),
                                                  idx=torch.tensor(idx)
                                                  )
@@ -161,12 +126,6 @@ class PreGraphDataset(torch_geometric.data.Dataset, ABC):
         context_regr_smooth = torch.load(self.context_regr_smooth_files[index])
         ego_regr_smooth = torch.load(self.ego_regr_smooth_files[index])
 
-        try:
-            city = str(token[3].split("-")[0])
-        except:
-            print(self.rgb_files[index])
-            print(token)
-            exit(1)
 
         # For debugging RGB, context- and ego-regression as well as sampled edges.
         if self.visualize:
@@ -208,7 +167,7 @@ class PreGraphDataset(torch_geometric.data.Dataset, ABC):
                                          context_regr_smooth=torch.FloatTensor(context_regr_smooth), # [0.0, 1.0]
                                          ego_regr_smooth=torch.FloatTensor(ego_regr_smooth), # [0.0, 1.0]
                                          data_time=torch.tensor(time.time() - start_time), # Time used to load the data
-                                         tile_no=torch.tensor(tile_no),
+                                         tile_id=tile_id,
                                          walk_no=torch.tensor(walk_no),
                                          idx=torch.tensor(idx),
                                          city=city
