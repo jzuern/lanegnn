@@ -34,6 +34,20 @@ ______________________________________________________________________
 To view the download instructions, please see the file [DOWNLOAD.md](urbanlanegraph_dataset/DOWNLOAD.md)
 
 
+### Dataset processing
+
+
+Instructions on how to process the dataset into a representation suitable for model training may be found in 
+[dataset_preparation/PROCESS_DATA.md](dataset_preparation/PROCESS_DATA.md).
+
+
+### Model training
+
+The models defined in `methods/` can be trained using the scripts `methods/train_centerline_regression.py` and `methods/train_lanegnn.py`.
+
+For more information, please see [methods/TRAINING.md](methods/TRAINING.md).
+
+
 ### Evaluator
 
 [![DOI](https://img.shields.io/badge/license-MIT-lightgrey)]()

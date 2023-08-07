@@ -7,6 +7,11 @@ conda env create -f environment.yml
 conda activate urbanlanegraph
 ```
 
+You can also u update the environment if you have already created it before.
+```bash
+conda env update -f environment.yml --name urbanlanegraph
+```
+
 
 To install the `urbanlanegraph_evaluator` package, please execute the following commands:
 
