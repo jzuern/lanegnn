@@ -2,3 +2,5 @@
 .idea/
 urbanlanegraph_evaluator/urbanlanegraph_evaluator.egg-info/
 __pycache__/
+wandb/
+prepr_log.txt

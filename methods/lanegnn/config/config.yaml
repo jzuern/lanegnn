@@ -1,26 +1,24 @@
 main:
     project: 'lanegnn'
-    dataset: 'paloalto'
-    version: 'none'
+#    dataset: 'paloalto'
+#    version: 'none'
     disable_wandb: True
 paths:
-    home: /home/USER/
-    package: /home/USER/lanegnn
-    dataroot: /data/ulg_data/
-    checkpoints: /home/USER/checkpoints/
-    rel_dataset: rel_dataset-path
-    split: train
+#    home: /home/USER/
+    package: /home/zuern/lanegnn # TODO: change this to your path
+#    dataroot: /data/ulg_data/
+#    checkpoints: /home/USER/checkpoints/
+#    rel_dataset: rel_dataset-path
+#    split: train
     config_name: n400-halton-endpoint
 preprocessing:
-    num_cpus: 24
+    num_cpus: 8
     gt_pointwise: True
     sampling_method: halton
     num_node_samples: 400
     edge_proposal_method: random  # triangular or random
     N_interp: 3
     visualize: False
-    context_regressor_ckpt: lanegnn/centerlines-sdf-context.pth  # resnet152
-    ego_regressor_ckpt: lanegnn/centerlines-sdf-ego-context.pth  # resnet152
     ego_regressor_num_channels: 4
 model:
     device: cuda
@@ -31,23 +29,15 @@ model:
     beta_hi: 0.999
     num_epochs: 100
     gnn_depth: 6
-    # VARIANT lanegnn_node
-#    map_feat_dim: 128
-#    node_dim: 48
-#    edge_dim: 32
-#    msg_dim: 32
-#    edge_geo_dim: 32
-    # VARIANT lanegnn
-    map_feat_dim: 64 # 64
-    node_dim: 16 #16
-    edge_dim: 32 #32
-    msg_dim: 32 #32
-    edge_geo_dim: 16 #16
-    # end_of_archs_section
+    map_feat_dim: 64
+    node_dim: 16
+    edge_dim: 32
+    msg_dim: 32
+    edge_geo_dim: 16
     in_channels: 4  # number of channels of image
     loader_workers: 4
-    weight_decay: 1e-4 #0.0001
-    checkpoint: lanegnn/model.pth # USED FOR ALL PAPER RESULTS
+    weight_decay: 1e-4
+    checkpoint: lanegnn/model.pth
 driving:
     mode: distributed  # single, multiple, distributed
     device: cuda
