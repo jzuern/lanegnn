@@ -4,7 +4,7 @@ In this document, we describe how to process the UrbanLaneGraph dataset for mode
 
 ## 0. Download the dataset
 
-For instructions on how to download the dataset, please refer to [urbanlanegraph_dataset/DOWNLOAD.md](urbanlanegraph_dataset/DOWNLOAD.md).
+For instructions on how to download the dataset, please refer to [urbanlanegraph_dataset/DOWNLOAD.md](https://github.com/jzuern/lanegnn/blob/main/urbanlanegraph_dataset/DOWNLOAD.md).
 
 
 
