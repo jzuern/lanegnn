@@ -43,9 +43,14 @@ Instructions on how to process the dataset into a representation suitable for mo
 
 ### Model training
 
-The models defined in `methods/` can be trained using the scripts `methods/train_centerline_regression.py` and `methods/train_lanegnn.py`.
+Based on a number of requests regarding pre-trained model checkpoints, we provide them [here](https://drive.google.com/drive/folders/1XMSt-wIeZs59-yLgzYPZiA9fzBoo_ZGs?usp=sharing).
 
+The models defined in `methods/` can be trained using the scripts `methods/train_centerline_regression.py` and `methods/train_lanegnn.py`.
 For more information, please see [methods/TRAINING.md](methods/TRAINING.md).
+
+
+
+
 
 
 ### Evaluator
